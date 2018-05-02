@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Team 1 Chat</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <style>
+      html { 
+        margin: 50px 50px 150px 150px;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        background-color: green;
+      }
+      h1 {
+        font-size: 40px;
+        color: red;
+      }
+      h3 {
+        color: blue;
+      }
+      @keyframes bounceIn {
+        0% {
+          transform: scale(0.1);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      #messages {
+        background-color: grey;
+        margin-top: 20px;
+        padding-top: 20px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+      }
+      #messages li {
+        font-family: 'Courier New', Courier, monospace;
+        color: indigo;
+        animation-duration: 0.3s;
+        animation-name: bounceIn;
+      }
+      #dm {
+        font-weight: bold;
+      }
+      .btn {
+        margin: 10px 10px 10px 10px;
+      }
+
+    </style>
+    
+  </head>
+
+  <body>
+    <div class="jumbotron">
+      <div class="container">
+          <h1>Team 1 Protocol Chat Room</h1>
+          <h4>Implemented by Aidan and Andrew</h4>
+          <div class="username-select">
+            <h3>Set username here:</h3>
+            <form id="connect-form" action="">
+                <input id="u" autocomplete="off" /><button class="btn btn-primary">Send</button>
+            </form>
+          </div>
+          
+          <ul id="messages" class="list-group-item"></ul>
+      
+          <div class="message-field">
+            <h3>Enter message here:</h3>
+            <form id="chat-form" action="">
+              <input id="m" autocomplete="off" /><button class="btn btn-secondary">Send</button>
+            </form>
+          </div>
+          
+          <h4>Getting Started</h4>
+          <ul>
+            <li>Enter a username and submit. If you enter a username that is already in use, the server will automatically append a random number to the end.</li>
+            <li>Send a message!</li>
+            <li>Use "@[username]" to send a private message that will only appear on the recepients chatroom.</li>
+            <li>The recepient of your DM will have the message text bolded.</li>
+            <li>When you leave the chatroom, the chatroom will be notified that you left. </li>
+          </ul>
+      </div> 
+    </div>
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        $(function () {
+            var socket = io();
+            var username;
+
+            $('#connect-form').submit(function(){
+              username = $('#u').val();
+              var usrObj = {
+                username: username
+              };
+              socket.emit('connect message', usrObj);
+              $('#u').val('');
+              $('.username-select').hide();
+              return false;
+            });
+            socket.on('connect message', function(connect){
+                $('#messages').append($('<li class="list-group-item">').text(connect + ' has joined the chatroom!'));
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            $('#chat-form').submit(function(){
+
+              var messageInput =  $('#m').val();
+              var mention;
+              if (!(messageInput.includes("@"))) {
+                mention = "";
+              } else {
+                var mentionLocal = messageInput.indexOf(" ");
+                mention = messageInput.substring(1, mentionLocal);
+              }
+              var messageToSend = messageInput.substring(mentionLocal + 1, messageInput.length);
+              var today = new Date();
+              var dd = today.getDate();
+              var mm = today.getMonth();
+              var yyyy = today.getFullYear();
+              var hour = today.getHours();
+              var minutes = today.getMinutes();
+              var seconds = today.getSeconds();
+              var date = mm + "/" + dd + "/" + yyyy + " " + hour + ":" + minutes + ":" + seconds;
+
+              var msgObj = {
+                dm: mention,
+                message: messageToSend,
+                sender: username,
+                length: messageInput.length,
+                date: date
+              };
+              if(mention === "") {
+                socket.emit('chat message', msgObj);
+              } else {
+                socket.emit('private message', msgObj.dm, msgObj);
+              }
+              $('#m').val('');
+              return false;
+              });
+
+            socket.on('chat message', function(msg){
+              $('#messages').append($('<li class="list-group-item">').text(msg));
+              window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            socket.on('private message', function(msg){
+              $('#messages').append($('<li id="dm" class="list-group-item">').text(msg));
+              window.scrollTo(0, document.body.scrollHeight);
+            })
+          });
+    </script>
+    
+  </body>
+</html>

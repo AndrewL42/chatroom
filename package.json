@@ -1,0 +1,12 @@
+{
+    "name": "chatroom",
+    "version": "0.0.1",
+    "description": "chatroom using Team 1 protocol",
+    "scripts" : {
+        "start" : "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.15.2",
+        "socket.io": "^2.1.0"
+    }
+}
